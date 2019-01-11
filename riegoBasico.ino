@@ -18,7 +18,7 @@
  * Edit when necessary
  *
  */
-#define pumpTime 30000	//time in ms for the pump to continuously work when needed. 2L/min output.
+#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output.
 #define pumpThresh 40	//soil mosture threshold to activate the pump.
 #define pumpHour1 6 	//RTC time (hour, 24h fromat) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
@@ -26,7 +26,7 @@
 
 //start RTC and create global object
 DS1302RTC RTC( 3, 4, 5 ); //CE/RST, IO, CLK
-// Needed to set the time
+// Required to set the time
 #define DS1302_GND_PIN 6
 #define DS1302_VCC_PIN 7
 bool rtcFlag = 1; 	//1=ok, 0=nope
@@ -53,14 +53,15 @@ void setup(){
 }
 
 void loop(){
-  checkHygro();
 
-  checkPump();
+    if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
+    	checkHygro();
+    	checkPump();
+    }
 
-
-  Serial << F("sleeping for (almost) an hour...") << endl ;
-  delay(3600000-(pumpTime*2));
-  Serial << F("slept well. Checking everything...") << endl ;
+    //Serial << F("sleeping for (almost) an hour...") << endl ;
+    delay(3600000-(pumpTime*2));
+    //Serial << F("slept well. Checking everything...") << endl ;
 }
 
 /************************************************************
@@ -114,7 +115,6 @@ void testRTC(){		//test if the DS1302 module is working
 }
 
 void setRTC(){		//initializes DS1302 module
-
 
 	static time_t tLast;
     time_t t;
@@ -177,8 +177,7 @@ void setRTC(){		//initializes DS1302 module
 //Print an integer in "00" format (with leading zero),
 //followed by a delimiter character to Serial.
 //Input value assumed to be between 0 and 99.
-void printI00(int val, char delim)
-{
+void printI00(int val, char delim){
     if (val < 10) Serial << '0';
     Serial << _DEC(val);
     if (delim > 0) Serial << delim;
@@ -226,7 +225,7 @@ void checkHygro(){		//ask hygrometer "dafuq bruh?"
 
 void checkPump(){
 
-	if ( hygroValue <= pumpThresh && ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ) ){
+	if ( hygroValue <= pumpThresh ){
 		Serial << F("watering the plants...") << endl;
 		digitalWrite ( pumpPin, HIGH );
 		delay(pumpTime);
