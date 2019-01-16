@@ -59,6 +59,7 @@ void loop(){
     	startPump();
     }else if ( ( day(RTC.get()) == 16 || day(RTC.get()) == 02 ) && hour(RTC.get()) == 22 ){
     	//ignore soil moisture level and just deeply wet the soil
+    	Serial<< F("deeply watering as scheduled...");
     	deepWatering();
     }
 
@@ -244,6 +245,7 @@ void deepWatering(){
 	int pumpTimeBak = pumpTime; //backup the pumpTime pref
 	pumpTime = 16000; //about 0.5liters of water.
 	for ( int i=0; i<10; i++ ){ //over 2.5 hours, 10 times. Total 5 liters.
+		Serial<< F("cycle ")<<i<< F(" of 10.");
 		startPump();
 		delay( 900000 ); //15 minutes delay to let water infiltrate.
 	}
