@@ -18,7 +18,7 @@
  * Edit when necessary
  *
  */
-#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output.
+int     pumpTime=45000;	//time in ms for the pump to continuously work when needed. 2L/min output.
 #define pumpThresh 40	//soil mosture threshold to activate the pump.
 #define pumpHour1 6 	//RTC time (hour, 24h fromat) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
@@ -57,6 +57,8 @@ void loop(){
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
     	checkPump();
+    }else if ( ( day(RTC.get()) == 16 || day(RTC.get()) == 02 ) && hour(RTC.get()) == 21 ){ //ignore soil moisture
+    	deepWatering();
     }
 
     //Serial << F("sleeping for (almost) an hour...") << endl ;
@@ -235,6 +237,17 @@ void checkPump(){
 	}
 }
 
+
+void deepWatering(){
+
+	int pumpTimeBak = pumpTime; //backup the pumpTime pref
+	pumpTime = 16000; //about 0.5liters of water.
+	for ( int i=0; i<10; i++ ){ //over an hour and 40min, 10 times. Total 5 liters.
+		checkPump();
+		delay( 600000 ); //10 minutes delay to let water infiltrate.
+	}
+	pumpTime=pumpTimeBak;	//restore original value
+}
 
 
 
