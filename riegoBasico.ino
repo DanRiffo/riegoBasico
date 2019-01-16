@@ -56,8 +56,9 @@ void loop(){
 
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
-    	checkPump();
-    }else if ( ( day(RTC.get()) == 16 || day(RTC.get()) == 02 ) && hour(RTC.get()) == 21 ){ //ignore soil moisture
+    	startPump();
+    }else if ( ( day(RTC.get()) == 16 || day(RTC.get()) == 02 ) && hour(RTC.get()) == 22 ){
+    	//ignore soil moisture level and just deeply wet the soil
     	deepWatering();
     }
 
@@ -225,7 +226,7 @@ void checkHygro(){		//ask hygrometer "dafuq bruh?"
  *
  ************************************************************/
 
-void checkPump(){
+void startPump(){
 
 	if ( hygroValue <= pumpThresh ){
 		Serial << F("watering the plants...") << endl;
@@ -242,9 +243,9 @@ void deepWatering(){
 
 	int pumpTimeBak = pumpTime; //backup the pumpTime pref
 	pumpTime = 16000; //about 0.5liters of water.
-	for ( int i=0; i<10; i++ ){ //over an hour and 40min, 10 times. Total 5 liters.
-		checkPump();
-		delay( 600000 ); //10 minutes delay to let water infiltrate.
+	for ( int i=0; i<10; i++ ){ //over 2.5 hours, 10 times. Total 5 liters.
+		startPump();
+		delay( 900000 ); //15 minutes delay to let water infiltrate.
 	}
 	pumpTime=pumpTimeBak;	//restore original value
 }
