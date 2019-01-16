@@ -53,11 +53,15 @@ void setup(){
 }
 
 void loop(){
-
+    //Serial<<day(RTC.get());
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
     	startPump();
-    }else if ( ( day(RTC.get()) == 16 || day(RTC.get()) == 02 ) && hour(RTC.get()) == 22 ){
+    }else if ( day(RTC.get()) == 02 && hour(RTC.get()) == 22 ){
+    	//ignore soil moisture level and just deeply wet the soil
+    	Serial<< F("deeply watering as scheduled...");
+    	deepWatering();
+    }else if ( day(RTC.get()) == 16 && hour(RTC.get()) == 22 ){
     	//ignore soil moisture level and just deeply wet the soil
     	Serial<< F("deeply watering as scheduled...");
     	deepWatering();
@@ -72,7 +76,8 @@ void loop(){
  * Begin RTC (Real Time Clock) control.
  *
  */
-void testRTC(){		//test if the DS1302 module is working
+void testRTC(){
+	//test if the DS1302 module is working
 
 	//setSyncProvider() causes the Time library to synchronize with the
 	//external RTC by calling RTC.get() every five minutes by default.
