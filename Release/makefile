@@ -55,7 +55,7 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 AR += \
-/media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/arduino.ar \
+/home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/arduino.ar \
 
 ELF += \
 riegoBasico.elf \
@@ -71,19 +71,19 @@ all: riegoBasico
 riegoBasico: $(HEX)
 	@echo 'Building target: $@'
 	@echo 'Printing size:'
-	"/media/Datos/Descargas/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-size" -A "/media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/riegoBasico.elf"
+	"/home/alucard/Downloads/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-size" -A "/home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/riegoBasico.elf"
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-/media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/arduino.ar: $(AR_OBJ)
+/home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/arduino.ar: $(AR_OBJ)
 	@echo 'Starting archiver'
-	"/media/Datos/Descargas/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-gcc-ar" rcs     /media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/arduino.ar $(AR_OBJ)
+	"/home/alucard/Downloads/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-gcc-ar" rcs     /home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/arduino.ar $(AR_OBJ)
 	@echo 'Finished building: $@'
 	@echo ' '
 
 riegoBasico.elf: $(LINK_OBJ) $(AR)
 	@echo 'Starting combiner'
-	"/media/Datos/Descargas/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-gcc" -Wall -Wextra -Os -g -flto -fuse-linker-plugin -Wl,--gc-sections -mmcu=atmega328p  -o "/media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/riegoBasico.elf"   $(LINK_OBJ)   /media/Datos/Descargas/arduino/proyectos/riegoBasico/Release/arduino.ar  "-L/media/Datos/Descargas/arduino/proyectos/riegoBasico/Release" -lm
+	"/home/alucard/Downloads/arduino/sloeber//arduinoPlugin/packages/arduino/tools/avr-gcc/5.4.0-atmel3.6.1-arduino2/bin/avr-gcc" -Wall -Wextra -Os -g -flto -fuse-linker-plugin -Wl,--gc-sections -mmcu=atmega328p  -o "/home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/riegoBasico.elf"   $(LINK_OBJ)   /home/alucard/Downloads/arduino/proyectos/riegoBasico/Release/arduino.ar  "-L/home/alucard/Downloads/arduino/proyectos/riegoBasico/Release" -lm
 	@echo 'Finished building: $@'
 	@echo ' '
 

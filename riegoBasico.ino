@@ -19,9 +19,12 @@
  *
  */
 long    pumpTime=45000;	//time in ms for the pump to continuously work when needed. 2L/min output.
-#define pumpThresh 40	//soil mosture threshold to activate the pump.
-#define pumpHour1 6 	//RTC time (hour, 24h fromat) to activate the pump if needed
+#define pumpThresh 40	//soil moisture threshold to activate the pump.
+#define pumpHour1 6 	//RTC time (hour, 24h format) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
+#define deepD1 2		//day to deeply wet the ground
+#define deepD2 16		//same as above
+#define deepH 22		//hour to deeply irrigate
 
 
 //start RTC and create global object
@@ -56,11 +59,11 @@ void loop(){
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
     	startPump();
-    }else if ( day(RTC.get()) == 2 && hour(RTC.get()) == 22 ){
+    }else if ( day(RTC.get()) == deepD1 && hour(RTC.get()) == deepH ){
     	//ignore soil moisture level and just deeply wet the soil
     	Serial<< F("deeply watering as scheduled...") << endl;
     	deepWatering();
-    }else if ( day(RTC.get()) == 16 && hour(RTC.get()) == 22 ){
+    }else if ( day(RTC.get()) == deepD2 && hour(RTC.get()) == deepH ){
     	//ignore soil moisture level and just deeply wet the soil
     	Serial<< F("deeply watering as scheduled...") << endl;
     	deepWatering();
@@ -236,8 +239,10 @@ void startPump(){
 	if ( hygroValue <= pumpThresh ){
 		Serial << F("watering the plants...") << endl;
 		digitalWrite ( pumpPin, HIGH );
+		digitalWrite ( 13, HIGH ); //enable RX LED
 		delay(pumpTime);
 		digitalWrite ( pumpPin, LOW );
+		digitalWrite ( 13, LOW ); //disable RX LED
 
 		Serial << F("Finished. Plants are happy now :D") << endl;
 	}
@@ -251,9 +256,10 @@ void deepWatering(){
 	for ( int i=0; i<10; i=i+1 ){ //over 2.5 hours, 10 times. Total 5 liters.
 		Serial << F("cycle ") << i+1 << F(" of 10.") << endl;
 		startPump();
-		delay( 900000 ); //15 minutes delay to let water infiltrate.
+		delay( 900 ); //15 minutes delay to let water infiltrate.
 	}
-	pumpTime=pumpTimeBak;	//restore original value
+	pumpTime = pumpTimeBak;	//restore original value
+	Serial << F("Deep watering done.") << endl;
 }
 
 
