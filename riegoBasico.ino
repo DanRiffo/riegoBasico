@@ -18,7 +18,7 @@
  * Edit when necessary
  *
  */
-int     pumpTime=45000;	//time in ms for the pump to continuously work when needed. 2L/min output.
+long    pumpTime=45000;	//time in ms for the pump to continuously work when needed. 2L/min output.
 #define pumpThresh 40	//soil mosture threshold to activate the pump.
 #define pumpHour1 6 	//RTC time (hour, 24h fromat) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
@@ -53,17 +53,16 @@ void setup(){
 }
 
 void loop(){
-    //Serial<<day(RTC.get());
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
     	startPump();
-    }else if ( day(RTC.get()) == 02 && hour(RTC.get()) == 22 ){
+    }else if ( day(RTC.get()) == 2 && hour(RTC.get()) == 22 ){
     	//ignore soil moisture level and just deeply wet the soil
-    	Serial<< F("deeply watering as scheduled...");
+    	Serial<< F("deeply watering as scheduled...") << endl;
     	deepWatering();
     }else if ( day(RTC.get()) == 16 && hour(RTC.get()) == 22 ){
     	//ignore soil moisture level and just deeply wet the soil
-    	Serial<< F("deeply watering as scheduled...");
+    	Serial<< F("deeply watering as scheduled...") << endl;
     	deepWatering();
     }
 
@@ -249,8 +248,8 @@ void deepWatering(){
 
 	int pumpTimeBak = pumpTime; //backup the pumpTime pref
 	pumpTime = 16000; //about 0.5liters of water.
-	for ( int i=0; i<10; i++ ){ //over 2.5 hours, 10 times. Total 5 liters.
-		Serial<< F("cycle ")<<i<< F(" of 10.");
+	for ( int i=0; i<10; i=i+1 ){ //over 2.5 hours, 10 times. Total 5 liters.
+		Serial << F("cycle ") << i+1 << F(" of 10.") << endl;
 		startPump();
 		delay( 900000 ); //15 minutes delay to let water infiltrate.
 	}
