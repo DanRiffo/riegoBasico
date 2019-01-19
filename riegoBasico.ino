@@ -18,12 +18,14 @@
  * Edit when necessary
  *
  */
-long    pumpTime=45000;	//time in ms for the pump to continuously work when needed. 2L/min output.
+#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output.
 #define pumpThresh 40	//soil moisture threshold to activate the pump.
 #define pumpHour1 6 	//RTC time (hour, 24h format) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
-#define deepD1 2		//day to deeply wet the ground
-#define deepD2 16		//same as above
+#define deepD1 7		//day to deeply wet the ground
+#define deepD2 14		//same as above
+#define deepD3 21		//same as above
+#define deepD4 28		//same as above
 #define deepH 22		//hour to deeply irrigate
 
 
@@ -58,20 +60,17 @@ void setup(){
 void loop(){
     if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
     	checkHygro();
-    	startPump();
-    }else if ( day(RTC.get()) == deepD1 && hour(RTC.get()) == deepH ){
-    	//ignore soil moisture level and just deeply wet the soil
-    	Serial<< F("deeply watering as scheduled...") << endl;
-    	deepWatering();
-    }else if ( day(RTC.get()) == deepD2 && hour(RTC.get()) == deepH ){
-    	//ignore soil moisture level and just deeply wet the soil
-    	Serial<< F("deeply watering as scheduled...") << endl;
-    	deepWatering();
+    	startPump(pumpTime);
+    }else if (hour(RTC.get()) == deepH){
+    	int Day = day(RTC.get());
+    	if ( Day == deepD1 || Day == deepD2 || Day == deepD3 || Day == deepD4 ){
+    		//ignore soil moisture level and just deeply wet the soil
+    		Serial<< F("deeply watering as scheduled...") << endl;
+    		deepWatering();
+    	}
     }
 
-    //Serial << F("sleeping for (almost) an hour...") << endl ;
-    delay(3600000-(pumpTime*2));
-    //Serial << F("slept well. Checking everything...") << endl ;
+    delay(3600000-(pumpTime*2)); //sleeps for almost an hour
 }
 
 /************************************************************
@@ -234,31 +233,28 @@ void checkHygro(){		//ask hygrometer "dafuq bruh?"
  *
  ************************************************************/
 
-void startPump(){
+void startPump(long time){
 
 	if ( hygroValue <= pumpThresh ){
-		Serial << F("watering the plants...") << endl;
+		Serial << F("watering the plants...");
 		digitalWrite ( pumpPin, HIGH );
 		digitalWrite ( 13, HIGH ); //enable RX LED
-		delay(pumpTime);
+		delay(time);
 		digitalWrite ( pumpPin, LOW );
 		digitalWrite ( 13, LOW ); //disable RX LED
 
-		Serial << F("Finished. Plants are happy now :D") << endl;
+		Serial << F("     Finished.") << endl;
 	}
 }
 
 
 void deepWatering(){
 
-	int pumpTimeBak = pumpTime; //backup the pumpTime pref
-	pumpTime = 16000; //about 0.5liters of water.
 	for ( int i=0; i<10; i=i+1 ){ //over 2.5 hours, 10 times. Total 5 liters.
 		Serial << F("cycle ") << i+1 << F(" of 10.") << endl;
-		startPump();
-		delay( 900 ); //15 minutes delay to let water infiltrate.
+		startPump(16000); //about 0.5liters of water.
+		delay( 900000 ); //15 minutes delay to let water infiltrate.
 	}
-	pumpTime = pumpTimeBak;	//restore original value
 	Serial << F("Deep watering done.") << endl;
 }
 
