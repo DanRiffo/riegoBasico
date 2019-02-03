@@ -1,14 +1,14 @@
 core/core/wiring_pulse.c.o: \
- /home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_pulse.c \
- /home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_private.h \
- /home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/Arduino.h \
- /home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/binary.h \
- /home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/variants/standard/pins_arduino.h
+ /media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_pulse.c \
+ /media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_private.h \
+ /media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/Arduino.h \
+ /media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/binary.h \
+ /media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/variants/standard/pins_arduino.h
 
-/home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_private.h:
+/media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/wiring_private.h:
 
-/home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/Arduino.h:
+/media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/Arduino.h:
 
-/home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/binary.h:
+/media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/cores/arduino/binary.h:
 
-/home/alucard/Downloads/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/variants/standard/pins_arduino.h:
+/media/Datos/Descargas/arduino/sloeber/arduinoPlugin/packages/arduino/hardware/avr/1.6.23/variants/standard/pins_arduino.h:

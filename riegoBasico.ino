@@ -36,7 +36,7 @@
  * Edit when necessary
  *
  */
-#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output.
+#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output. Works 2 times each set hour.
 #define pumpThresh 40	//soil moisture threshold to activate the pump.
 #define pumpHour1 6 	//RTC time (hour, 24h format) to activate the pump if needed
 #define pumpHour2 21	//same as pumpHour1. Added as second check
@@ -90,6 +90,8 @@ void loop(){
 	watered = 'n';
     if ( Hora == pumpHour1 || Hora == pumpHour2 ){
     	checkHygro();
+    	startPump(pumpTime);
+    	delay(300000);
     	startPump(pumpTime);
     }else if ( Hora == deepH){
     	int Day = day(RTC.get());
@@ -321,9 +323,12 @@ void dataWrite(){	//build and write a data line into the microSD card
 
 	//line << year(RTC.get()) << F(" ") << month(RTC.get()) << F(" ") << day(RTC.get()) << F(" ") << hour(RTC.get()) << F(" ") << minute(RTC.get()) << F(" ") << hygroValue << F(" ") << watered;
 
+	Serial << F("Writing report line to microSD card... ") ;
 	int err = dataWriteOnSD(line, "data.txt");
 	if (err)
 		Serial << F("An error occurred while writing to microSD card.") << endl;
+	else
+		Serial << F("Ok.") << endl;
 
 }
 
