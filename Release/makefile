@@ -12,6 +12,9 @@ RM := rm
 -include libraries/Wire/src/utility/subdir.mk
 -include libraries/Wire/src/subdir.mk
 -include libraries/Time/subdir.mk
+-include libraries/SPI/src/subdir.mk
+-include libraries/SD/src/utility/subdir.mk
+-include libraries/SD/src/subdir.mk
 -include libraries/Low-Power-master/subdir.mk
 -include libraries/LiquidCrystal/src/subdir.mk
 -include libraries/DS1302RTC/subdir.mk

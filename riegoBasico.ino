@@ -6,11 +6,29 @@
  * Danilo Riffo, 2018
  * danriffo@gmail.com
  *
+ *
+ *
+ *
+ *******************************************************************************
+ * Pins used:
+ *
+ *  0   1   2   3   4   5   6   7         8   9  10   11   12  13
+ *            |RST IO  CLK GND VCC|      HY  PMP|CS  MOSI MISO SCK|
+ *            |        RTC        |             |     microSD     |
+ *
+ *
+ * A0  A1  A2  A3  A4  A5
+ * HY
+ *
+ *
+ *
  */
 
-#include <DS1302RTC.h>
 #include <Streaming.h>
-#include <Time.h>
+#include <DS1302RTC.h>	//for RTC support
+#include <Time.h>		//for RTC support
+#include <SPI.h>		//for SD card support
+#include <SD.h>			//for SD card support
 
 /*
  * Irrigation settings.
@@ -29,7 +47,7 @@
 #define deepH 22		//hour to deeply irrigate
 
 
-//start RTC and create global object
+//set RTC pins and create global object
 DS1302RTC RTC( 3, 4, 5 ); //CE/RST, IO, CLK
 // Required to set the time
 #define DS1302_GND_PIN 6
@@ -44,6 +62,9 @@ int hygroValue;
 //pump pin setting
 #define pumpPin 9
 
+//global flag for watering type performed
+char watered;	//y,n,d (yes, no, deep)
+
 
 void setup(){
   Serial.begin(9600);
@@ -55,13 +76,22 @@ void setup(){
   pinMode ( pumpPin, OUTPUT );
   digitalWrite ( pumpPin, LOW );
 
+  // initialize microSD module
+  if (!SD.begin(10)) {	//use pin 10 as ChipSelect. This is the default.
+	  Serial.println("uSD initialization failed!");
+	  while (1);
+  }
+  Serial.println("uSD initialization done.");
+
 }
 
 void loop(){
-    if ( hour(RTC.get()) == pumpHour1 || hour(RTC.get()) == pumpHour2 ){
+	int Hora = hour(RTC.get());
+	watered = 'n';
+    if ( Hora == pumpHour1 || Hora == pumpHour2 ){
     	checkHygro();
     	startPump(pumpTime);
-    }else if (hour(RTC.get()) == deepH){
+    }else if ( Hora == deepH){
     	int Day = day(RTC.get());
     	if ( Day == deepD1 || Day == deepD2 || Day == deepD3 || Day == deepD4 ){
     		//ignore soil moisture level and just deeply wet the soil
@@ -70,8 +100,12 @@ void loop(){
     	}
     }
 
+    dataWrite();
+
     delay(3600000-(pumpTime*2)); //sleeps for almost an hour
 }
+
+
 
 /************************************************************
  * Begin RTC (Real Time Clock) control.
@@ -212,11 +246,11 @@ void printDate(time_t t){	//self-explanatory
 
 
 /************************************************************
- * Begin Higrometer control.
+ * Begin Hygrometer control.
  *
  */
 
-void checkHygro(){		//ask hygrometer "dafuq bruh?"
+void checkHygro(){		//ask hygrometer "sup bruh?"
     hygroValue = 0;
 
     digitalWrite ( 8, HIGH ); //enable hygrometer
@@ -229,9 +263,16 @@ void checkHygro(){		//ask hygrometer "dafuq bruh?"
 }
 
 /*
- * End Higrometer control.
+ * End Hygrometer control.
  *
  ************************************************************/
+
+
+
+/************************************************************
+ * Begin Pump control.
+ *
+ */
 
 void startPump(long time){
 
@@ -244,6 +285,7 @@ void startPump(long time){
 		digitalWrite ( 13, LOW ); //disable RX LED
 
 		Serial << F("     Finished.") << endl;
+		watered = 'y';
 	}
 }
 
@@ -256,8 +298,60 @@ void deepWatering(){
 		delay( 900000 ); //15 minutes delay to let water infiltrate.
 	}
 	Serial << F("Deep watering done.") << endl;
+	watered = 'd';
 }
 
+/*
+ * End Pump control.
+ *
+ ************************************************************/
 
+
+
+/************************************************************
+ * Begin MicroSD control.
+ *
+ */
+
+void dataWrite(){	//build and write a data line into the microSD card
+
+	char line[100];
+
+	sprintf(line, "%04i %02i %02i %02i %02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
+
+	//line << year(RTC.get()) << F(" ") << month(RTC.get()) << F(" ") << day(RTC.get()) << F(" ") << hour(RTC.get()) << F(" ") << minute(RTC.get()) << F(" ") << hygroValue << F(" ") << watered;
+
+	int err = dataWriteOnSD(line, "data.txt");
+	if (err)
+		Serial << F("An error occurred while writing to microSD card.") << endl;
+
+}
+
+int dataWriteOnSD(char wDATA[], char wFILE[]){	//write wDATA into wFILE on sdcard
+
+	/* as convention, lines written should follow this format:
+	 *
+	 * year	month 	day hour 	minute 	HygroValue%	watered?
+	 * int	int		int	int		int		int			[y,n,d]
+	 *
+	 */
+
+	File file = SD.open(wFILE, FILE_WRITE);	//open the file
+	if (!file){	//if error, then error :P
+		Serial << F("error opening file <") << wFILE << F(">") << endl;
+		return(1);	//errorcode 1
+	}
+
+	file.println(wDATA);	//write line to file
+
+	file.close();	//close the file
+	return(0);	//no error
+
+}
+
+/*
+ * End MicroSD control.
+ *
+ ************************************************************/
 
 

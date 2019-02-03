@@ -27,6 +27,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Wire/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/DS1302RTC}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Low-Power-master}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SD/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SPI/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.919655699" name="CPP source files" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -40,6 +42,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Wire/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/DS1302RTC}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Low-Power-master}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SD/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SPI/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.825139013" name="C Source Files" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -51,6 +55,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Streaming/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Time}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SD/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/riegoBasico/libraries/SPI/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.1527461979" name="Assembly source files" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>

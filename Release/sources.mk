@@ -38,6 +38,9 @@ core/core \
 libraries/DS1302RTC \
 libraries/LiquidCrystal/src \
 libraries/Low-Power-master \
+libraries/SD/src \
+libraries/SD/src/utility \
+libraries/SPI/src \
 libraries/Time \
 libraries/Wire/src \
 libraries/Wire/src/utility \
