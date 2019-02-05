@@ -88,9 +88,9 @@ void setup(){
 
 void loop(){
 	int Hora = hour(RTC.get());
+	checkHygro();
 	watered = 'n';
     if ( Hora == pumpHour1 || Hora == pumpHour2 ){
-    	checkHygro();
     	startPump(pumpTime);
     	delay(300000);
     	startPump(pumpTime);
@@ -257,7 +257,7 @@ void checkHygro(){		//ask hygrometer "sup bruh?"
     hygroValue = 0;
 
     digitalWrite ( 8, HIGH ); //enable hygrometer
-    delay(20000); //keep the sensor working for 20s to ensure accuracy
+    delay(10000); //keep the sensor working for 10s to ensure accuracy
 
     hygroValue = map(analogRead(hygroPin),550,0,0,100);
     Serial << F("Moisture: ") << hygroValue << F("%") << endl;
@@ -320,7 +320,7 @@ void dataWrite(){	//build and write a data line into the microSD card
 
 	char line[100];
 
-	sprintf(line, "%04i/%02i/%02i %02i %02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
+	sprintf(line, "%04i/%02i/%02i %02i:%02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
 
 	Serial << F("Writing report line to microSD card... ") ;
 	int err = dataWriteOnSD(line, "data.txt");
@@ -335,8 +335,8 @@ int dataWriteOnSD(char wDATA[], char wFILE[]){	//write wDATA into wFILE on sdcar
 
 	/* lines should follow this format:
 	 *
-	 * year/month / day hour  	minute 	HygroValue%	watered?
-	 * int	int		int	int		int		int			[y,n,d]
+	 * year/month/day hour:minute HygroValue% watered?
+	 * int	int	  int int  int	  int         [y,n,d]
 	 *
 	 */
 
