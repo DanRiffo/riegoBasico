@@ -78,10 +78,11 @@ void setup(){
 
   // initialize microSD module
   if (!SD.begin(10)) {	//use pin 10 as ChipSelect. This is the default.
-	  Serial.println("uSD initialization failed!");
-	  while (1);
+	  Serial.println("uSD initialization failed!. Status will not be recorded.");
   }
-  Serial.println("uSD initialization done.");
+  else {
+	  Serial.println("uSD initialization done.");
+  }
 
 }
 
@@ -319,9 +320,7 @@ void dataWrite(){	//build and write a data line into the microSD card
 
 	char line[100];
 
-	sprintf(line, "%04i %02i %02i %02i %02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
-
-	//line << year(RTC.get()) << F(" ") << month(RTC.get()) << F(" ") << day(RTC.get()) << F(" ") << hour(RTC.get()) << F(" ") << minute(RTC.get()) << F(" ") << hygroValue << F(" ") << watered;
+	sprintf(line, "%04i/%02i/%02i %02i %02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
 
 	Serial << F("Writing report line to microSD card... ") ;
 	int err = dataWriteOnSD(line, "data.txt");
@@ -334,9 +333,9 @@ void dataWrite(){	//build and write a data line into the microSD card
 
 int dataWriteOnSD(char wDATA[], char wFILE[]){	//write wDATA into wFILE on sdcard
 
-	/* as convention, lines written should follow this format:
+	/* lines should follow this format:
 	 *
-	 * year	month 	day hour 	minute 	HygroValue%	watered?
+	 * year/month / day hour  	minute 	HygroValue%	watered?
 	 * int	int		int	int		int		int			[y,n,d]
 	 *
 	 */
