@@ -13,12 +13,12 @@
  * Pins used:
  *
  *  0   1   2   3   4   5   6   7         8   9  10   11   12  13
- *            |RST IO  CLK GND VCC|      HY  PMP|CS  MOSI MISO SCK|
+ *         THO|RST IO  CLK GND VCC|      HY  PMP|CS  MOSI MISO SCK|
  *            |        RTC        |             |     microSD     |
  *
  *
  * A0  A1  A2  A3  A4  A5
- * HY
+ * HY      TH
  *
  *
  *
@@ -36,15 +36,15 @@
  * Edit when necessary
  *
  */
-#define pumpTime 45000	//time in ms for the pump to continuously work when needed. 2L/min output. Works 2 times each set hour.
-#define pumpThresh 40	//soil moisture threshold to activate the pump.
-#define pumpHour1 6 	//RTC time (hour, 24h format) to activate the pump if needed
-#define pumpHour2 21	//same as pumpHour1. Added as second check
-#define deepD1 7		//day to deeply wet the ground
-#define deepD2 14		//same as above
-#define deepD3 21		//same as above
-#define deepD4 28		//same as above
-#define deepH 22		//hour to deeply irrigate
+long pumpTime=90000;	//time in ms for the pump to continuously work when needed. 2L/min output. Works 2 times each set hour.
+int pumpThresh=60;	//soil moisture threshold to activate the pump.
+int pumpHour1=5;	//RTC time (hour, 24h format) to activate the pump if needed
+int pumpHour2=20;   //same as pumpHour1. Added as second check
+int deepD1=7;		//day to deeply wet the ground
+int deepD2=14;		//same as above
+int deepD3=21;		//same as above
+int deepD4=28;		//same as above
+int deepH=22;		//hour to deeply irrigate
 
 
 //set RTC pins and create global object
@@ -65,13 +65,28 @@ int hygroValue;
 //global flag for watering type performed
 char watered;	//y,n,d (yes, no, deep)
 
+//defines thermistor pin and extra resistor load (in ohms)
+#define thermistorPin1 A1
+#define thermistorPin2 A2
+#define thermistorPinOn 2	//on/off switch for thermistor
+#define thermistorLoad1 9900	//says my multimeter
+#define thermistorLoad2 9700
+#define thermistorSamples 5  //samples to average for increased accuracy
+#define thermistor25C 10000
+#define thermistorBeta 3343.25
+float temp1;
+float temp2;
+
 
 void setup(){
   Serial.begin(9600);
-  digitalWrite ( 13, LOW ); //disable RX LED
-  digitalWrite ( 8, LOW );  //disable hygrometer until needed
+
+  digitalWrite ( 13, LOW ); 			//disable RX LED
+  digitalWrite ( hygroPinOn, LOW );  	//disable hygrometer until needed
+  digitalWrite ( thermistorPinOn, LOW); //disable thermistor until needed
 
   testRTC();	//tests and initializes the RTC
+  //setRTC();		//manually set RTC when needed
 
   pinMode ( pumpPin, OUTPUT );
   digitalWrite ( pumpPin, LOW );
@@ -81,6 +96,7 @@ void setup(){
 	  Serial.println("uSD initialization failed!. Status will not be recorded.");
   }
   else {
+	  readConfig(); //we know card is accessible.
 	  Serial.println("uSD initialization done.");
   }
 
@@ -88,26 +104,50 @@ void setup(){
 
 void loop(){
 	int Hora = hour(RTC.get());
+
 	checkHygro();
 	watered = 'n';
     if ( Hora == pumpHour1 || Hora == pumpHour2 ){
     	startPump(pumpTime);
-    	delay(300000);
-    	startPump(pumpTime);
-    }else if ( Hora == deepH){
+    	//delay(300000);
+    	//startPump(pumpTime);
+    }/*else if ( Hora == deepH){
     	int Day = day(RTC.get());
     	if ( Day == deepD1 || Day == deepD2 || Day == deepD3 || Day == deepD4 ){
     		//ignore soil moisture level and just deeply wet the soil
     		Serial<< F("deeply watering as scheduled...") << endl;
     		deepWatering();
     	}
-    }
+    }*/ //commented out to disable deep irrigation
+
+    getTemperature();
 
     dataWrite();
 
     delay(3600000-(pumpTime*2)); //sleeps for almost an hour
 }
 
+
+/************************************************************
+ * Read configuration from uSD card.
+ *
+ */
+void readConfig(){
+	File file = SD.open("config.cfg");	//open the file
+	char single;
+
+	if (!file){	//if error, then error :P
+		Serial << F("error opening file <config.cfg>") << endl;
+	}else{
+
+		while (file.available()){
+			single=file.read(); //do something with this read char
+		}
+
+	}
+
+	file.close();	//close the file
+}
 
 
 /************************************************************
@@ -135,7 +175,6 @@ void testRTC(){
 	Serial.println();
 	delay(500);
 
-
 	if (RTC.haltRTC()) {
 		Serial.println("The DS1302 is stopped.");
 		Serial.println();
@@ -161,7 +200,7 @@ void testRTC(){
 	Serial.println("-------------------");
 }
 
-void setRTC(){		//initializes DS1302 module
+void setRTC(){		//initializes DS1302 module.
 
 	static time_t tLast;
     time_t t;
@@ -170,55 +209,56 @@ void setRTC(){		//initializes DS1302 module
 
 	while ( timeStatus() != timeSet && count < 11 ){		//if time is not set for the module, set it
 
-	    Serial << F("waiting for date at serial input...") << endl;
-	    count++;
-	    delay(5000);
+		Serial << F("waiting for date at serial input...") << endl;
+		count++;
+		delay(5000);
 
-	    //check for input to set the RTC, minimum length is 12, i.e. yy,m,d,h,m,s
-	    if (Serial.available() >= 12) {
-	    	//note that the tmElements_t Year member is an offset from 1970,
-	    	//but the RTC wants the last two digits of the calendar year.
-	    	//use the convenience macros from Time.h to do the conversions.
-	    	int y = Serial.parseInt();
-	    	if (y >= 100 && y < 1000)
-	    		Serial << F("Error: Year must be two or four digits") << endl;
-	    	else {
-	    		if (y >= 1000)
-	    			tm.Year = CalendarYrToTm(y);
-	    		else    //(y < 100)
-	    			tm.Year = y2kYearToTm(y);
-	    		tm.Month = Serial.parseInt();
-	    		tm.Day = Serial.parseInt();
-	    		tm.Hour = Serial.parseInt();
-	    		tm.Minute = Serial.parseInt();
-	    		tm.Second = Serial.parseInt();
-	    		t = makeTime(tm);
-	    		//use the time_t value to ensure correct weekday is set
-	    		if(RTC.set(t) == 0) { // Success
-	    			setTime(t);
-	    			Serial << F("RTC set to: ");
-	    			printDate(t);
-	    		}
-	    		else
-	    			Serial << F("RTC set failed") << endl;
-	    		//dump any extraneous input
-	    		while (Serial.available() > 0) Serial.read();
-	    	}
-	    }
+		//check for input to set the RTC, minimum length is 12, i.e. yy,m,d,h,m,s
+		if (Serial.available() >= 12) {
+			//note that the tmElements_t Year member is an offset from 1970,
+			//but the RTC wants the last two digits of the calendar year.
+			//use the convenience macros from Time.h to do the conversions.
+			int y = Serial.parseInt();
+			if (y >= 100 && y < 1000)
+				Serial << F("Error: Year must be two or four digits") << endl;
+			else {
+				if (y >= 1000)
+					tm.Year = CalendarYrToTm(y);
+				else    //(y < 100)
+					tm.Year = y2kYearToTm(y);
+				tm.Month = Serial.parseInt();
+				tm.Day = Serial.parseInt();
+				tm.Hour = Serial.parseInt();
+				tm.Minute = Serial.parseInt();
+				tm.Second = Serial.parseInt();
+				t = makeTime(tm);
+				//use the time_t value to ensure correct weekday is set
+				if(RTC.set(t) == 0) { // Success
+					setTime(t);
+					Serial << F("RTC set to: ");
+					printDate(t);
+				}
+				else
+					Serial << F("RTC set failed") << endl;
+				//dump any extraneous input
+				while (Serial.available() > 0) Serial.read();
+			}
+		}
 
-	    t = RTC.get(); //now();
-	    if (t != tLast) {
-	        tLast = t;
-	        printDate(t);
-	    }
+		t = RTC.get(); //now();
+		if (t != tLast) {
+			tLast = t;
+			printDate(t);
+		}
 
-	    if ( count == 10 )
-	    	Serial << F("last try.") << endl;
-	    else if ( count == 11 ){
-	    	Serial << F("RTC set failed.") << endl;
-	    	rtcFlag = 0;
-	    }
-	}
+		if ( count == 10 )
+			Serial << F("last try.") << endl;
+		else if ( count == 11 ){
+			Serial << F("RTC set failed.") << endl;
+			rtcFlag = 0;
+		}
+
+    }
 }
 
 //Print an integer in "00" format (with leading zero),
@@ -318,29 +358,58 @@ void deepWatering(){
 
 void dataWrite(){	//build and write a data line into the microSD card
 
-	char line[100];
+	char line[70];
+	char dataFile[] = "data.txt";
+	char buffer[12];
 
-	sprintf(line, "%04i/%02i/%02i %02i:%02i %03i %c", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
+	sprintf(line, "%04i/%02i/%02i %02i:%02i %03i         %c        ", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
+	dtostrf(temp1, 5, 2, buffer);
+	strcat(line, buffer);
+	dtostrf(temp2, 5, 2, buffer);
+	strcat(line, " ");
+	strcat(line, buffer);
 
-	Serial << F("Writing report line to microSD card... ") ;
-	int err = dataWriteOnSD(line, "data.txt");
+	Serial << F("Writing report line to microSD card... ");
+	int err = dataWriteOnSD(line, dataFile);
 	if (err)
 		Serial << F("An error occurred while writing to microSD card.") << endl;
 	else
-		Serial << F("Ok.") << endl;
+		Serial << F("SDcard write Ok.") << endl;
 
 }
 
-int dataWriteOnSD(char wDATA[], char wFILE[]){	//write wDATA into wFILE on sdcard
+int dataWriteOnSD(char *wDATA, char *wFILE){	//write wDATA into wFILE on sdcard
 
 	/* lines should follow this format:
 	 *
-	 * year/month/day hour:minute HygroValue% watered?
-	 * int	int	  int int  int	  int         [y,n,d]
+	 * year/month/day hour:minute HygroValue% watered? ºCinside ºCoutside
+	 * int	int	  int int  int	  int         [y,n,d]  00.00    00.00
+	 *
+	 *
+	 * and this spacing:
+	 *
+	 * year/mm/dd hh:mm HygroValue% watered? ºCin  ºCout
 	 *
 	 */
 
-	File file = SD.open(wFILE, FILE_WRITE);	//open the file
+	//test if file exists
+	File file = SD.open(wFILE, FILE_READ);	//open file in read mode
+
+	if (!file){
+		// if file doesn't exist, try creating it with header line
+		file = SD.open(wFILE, FILE_WRITE);
+		if (!file){	//if error, then error :P
+			Serial << F("error opening file <") << wFILE << F(">") << endl;
+			return(1);	//errorcode 1
+		}
+		Serial << F("Data file didn't exist. Created new one.") << endl;
+		file.println("year/mm/dd hh:mm HygroValue% watered? ºCin  ºCout");	//write header
+		file.close();
+	}
+	file.close();
+
+
+	file = SD.open(wFILE, FILE_WRITE);	//open the file
 	if (!file){	//if error, then error :P
 		Serial << F("error opening file <") << wFILE << F(">") << endl;
 		return(1);	//errorcode 1
@@ -359,3 +428,68 @@ int dataWriteOnSD(char wDATA[], char wFILE[]){	//write wDATA into wFILE on sdcar
  ************************************************************/
 
 
+/************************************************************
+ * Begin Thermistor control.
+ *
+ */
+
+void getTemperature (){
+	float average1=0.0;
+	float average2=0.0;
+	float vOut1=0.0;
+	float vOut2=0.0;
+	int sample=0;
+
+	digitalWrite (thermistorPinOn, HIGH);	//turns the thermistors on
+
+	average1 = 0.0;
+	average2 = 0.0;
+	// take N samples in a row, with a slight delay, and add them up
+	for (int i=0; i< thermistorSamples; i++){
+		sample = analogRead(thermistorPin1);
+		//Serial << F("Thermistor1 reading ") << i << F(": ") << sample << endl;
+		average1 += sample;
+		sample = analogRead(thermistorPin2);
+		//Serial << F("Thermistor2 reading ") << i << F(": ") << sample << endl;
+		average2 += sample;
+		delay(100);
+	}
+
+	//average taken samples
+	average1 /= thermistorSamples;
+	average2 /= thermistorSamples;
+	//Serial << F("Average TH1 reading: ") << average1 << endl;
+	//Serial << F("Average TH2 reading: ") << average2 << endl;
+
+	// convert the value to resistance
+	vOut1 = 5.0 * (float)average1 / 1024.0;
+	//Serial << F("vOut1: ") << vOut1 << endl;
+	vOut1 = thermistorLoad1 * (( 5.0 / vOut1 ) - 1.0);	//viva la resistance!
+	vOut2 = 5.0 * (float)average2 / 1024.0;
+	//Serial << F("vOut2: ") << vOut2 << endl;
+	vOut2 = thermistorLoad2 * (( 5.0 / vOut2 ) - 1.0);
+
+	//Serial << F("Thermistor1 resistance: ") << vOut1 << F(" ohms")<< endl;
+	//Serial << F("Thermistor2 resistance: ") << vOut2 << F(" ohms")<< endl;
+
+	//Convert resistance to ºC
+	temp1 = vOut1 / thermistor25C;  	// (R/Ro)
+	temp1 = log(temp1);                 // ln(R/Ro)
+	temp1 /= thermistorBeta;            // 1/B * ln(R/Ro)
+	temp1 += 1.0 / (25 + 273.15); 		// + (1/To)
+	temp1 = 1.0 / temp1;                // Invert
+	temp1 -= 273.15;                    // convert ºK to ºC
+
+	temp2 = vOut2 / thermistor25C;  	// (R/Ro)
+	temp2 = log(temp2);                 // ln(R/Ro)
+	temp2 /= thermistorBeta;            // 1/B * ln(R/Ro)
+	temp2 += 1.0 / (25 + 273.15); 		// + (1/To)
+	temp2 = 1.0 / temp2;                // Invert
+	temp2 -= 273.15;                    // convert ºK to ºC
+
+	Serial << F("Temperature1: ") << temp1 << F("ºC") << endl;
+	Serial << F("Temperature2: ") << temp2 << F("ºC") << endl;
+
+	digitalWrite (thermistorPinOn, LOW);	//Thermistors out.
+
+}
