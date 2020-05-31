@@ -13,12 +13,12 @@
  * Pins used:
  *
  *  0   1   2   3   4   5   6   7         8   9  10   11   12  13
- *         THO|RST IO  CLK GND VCC|      HY  PMP|CS  MOSI MISO SCK|
+ *            |RST IO  CLK GND VCC|      HY  PMP|CS  MOSI MISO SCK|
  *            |        RTC        |             |     microSD     |
  *
  *
  * A0  A1  A2  A3  A4  A5
- * HY      TH
+ * HY  TH1 TH2 THO
  *
  *
  *
@@ -39,7 +39,7 @@
 long pumpTime=90000;	//time in ms for the pump to continuously work when needed. 2L/min output. Works 2 times each set hour.
 int pumpThresh=60;	//soil moisture threshold to activate the pump.
 int pumpHour1=5;	//RTC time (hour, 24h format) to activate the pump if needed
-int pumpHour2=20;   //same as pumpHour1. Added as second check
+int pumpHour2=19;   //same as pumpHour1. Added as second check
 int deepD1=7;		//day to deeply wet the ground
 int deepD2=14;		//same as above
 int deepD3=21;		//same as above
@@ -68,9 +68,9 @@ char watered;	//y,n,d (yes, no, deep)
 //defines thermistor pin and extra resistor load (in ohms)
 #define thermistorPin1 A1
 #define thermistorPin2 A2
-#define thermistorPinOn 2	//on/off switch for thermistor
-#define thermistorLoad1 9900	//says my multimeter
-#define thermistorLoad2 9700
+#define thermistorPinOn A3	//on/off switch for thermistor
+#define thermistorLoad1 7000 //9900	//says my multimeter
+#define thermistorLoad2 6830 //9700
 #define thermistorSamples 5  //samples to average for increased accuracy
 #define thermistor25C 10000
 #define thermistorBeta 3343.25
@@ -79,11 +79,14 @@ float temp2;
 
 
 void setup(){
+  analogReference(EXTERNAL);	//increase analog accuracy
   Serial.begin(9600);
 
   digitalWrite ( 13, LOW ); 			//disable RX LED
   digitalWrite ( hygroPinOn, LOW );  	//disable hygrometer until needed
   digitalWrite ( thermistorPinOn, LOW); //disable thermistor until needed
+  pinMode(thermistorPinOn,OUTPUT);
+
 
   testRTC();	//tests and initializes the RTC
   //setRTC();		//manually set RTC when needed
@@ -439,8 +442,10 @@ void getTemperature (){
 	float vOut1=0.0;
 	float vOut2=0.0;
 	int sample=0;
+	float voltage=4.35;	//specific value to my board/transistor configuration
 
 	digitalWrite (thermistorPinOn, HIGH);	//turns the thermistors on
+	delay(20000); 	//wait 10s for thermistors to properly measure
 
 	average1 = 0.0;
 	average2 = 0.0;
@@ -458,19 +463,19 @@ void getTemperature (){
 	//average taken samples
 	average1 /= thermistorSamples;
 	average2 /= thermistorSamples;
-	//Serial << F("Average TH1 reading: ") << average1 << endl;
-	//Serial << F("Average TH2 reading: ") << average2 << endl;
+	Serial << F("Average TH1 reading: ") << average1 << endl;
+	Serial << F("Average TH2 reading: ") << average2 << endl;
 
 	// convert the value to resistance
-	vOut1 = 5.0 * (float)average1 / 1024.0;
-	//Serial << F("vOut1: ") << vOut1 << endl;
-	vOut1 = thermistorLoad1 * (( 5.0 / vOut1 ) - 1.0);	//viva la resistance!
-	vOut2 = 5.0 * (float)average2 / 1024.0;
-	//Serial << F("vOut2: ") << vOut2 << endl;
-	vOut2 = thermistorLoad2 * (( 5.0 / vOut2 ) - 1.0);
+	vOut1 = voltage * (float)average1 / 1024.0 ;
+	vOut2 = voltage * (float)average2 / 1024.0 ;
+	Serial << F("vOut1: ") << vOut1 << endl;
+	Serial << F("vOut2: ") << vOut2 << endl;
 
-	//Serial << F("Thermistor1 resistance: ") << vOut1 << F(" ohms")<< endl;
-	//Serial << F("Thermistor2 resistance: ") << vOut2 << F(" ohms")<< endl;
+	vOut1 = thermistorLoad1 * (( voltage / vOut1 ) - 1.0);	//viva la resistance!
+	vOut2 = thermistorLoad2 * (( voltage / vOut2 ) - 1.0);
+	Serial << F("Thermistor1 resistance: ") << vOut1 << F(" ohms")<< endl;
+	Serial << F("Thermistor2 resistance: ") << vOut2 << F(" ohms")<< endl;
 
 	//Convert resistance to ºC
 	temp1 = vOut1 / thermistor25C;  	// (R/Ro)
