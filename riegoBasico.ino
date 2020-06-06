@@ -54,6 +54,9 @@ DS1302RTC RTC( 3, 4, 5 ); //CE/RST, IO, CLK
 #define DS1302_VCC_PIN 7
 bool rtcFlag = 1; 	//1=ok, 0=nope
 
+// File to store data
+char dataFile[] = "data.txt";
+
 //hygrometer pin setting
 #define hygroPin A0
 #define hygroPinOn 8	//used to turn on/off the sensor via transistor
@@ -70,12 +73,15 @@ char watered;	//y,n,d (yes, no, deep)
 #define thermistorPin2 A2
 #define thermistorPinOn A3	//on/off switch for thermistor
 #define thermistorLoad1 7000 //9900	//says my multimeter
-#define thermistorLoad2 6830 //9700
+#define thermistorLoad2 7000 //9700
 #define thermistorSamples 5  //samples to average for increased accuracy
 #define thermistor25C 10000
 #define thermistorBeta 3343.25
 float temp1;
 float temp2;
+
+//define global variable to store the current hour
+int hora=14;
 
 
 void setup(){
@@ -84,12 +90,14 @@ void setup(){
 
   digitalWrite ( 13, LOW ); 			//disable RX LED
   digitalWrite ( hygroPinOn, LOW );  	//disable hygrometer until needed
-  digitalWrite ( thermistorPinOn, LOW); //disable thermistor until needed
-  pinMode(thermistorPinOn,OUTPUT);
+  pinMode ( thermistorPinOn, OUTPUT );
+  digitalWrite ( thermistorPinOn, LOW );//disable thermistor until needed
+
 
 
   testRTC();	//tests and initializes the RTC
   //setRTC();		//manually set RTC when needed
+  hora = hour(RTC.get()); //initialize
 
   pinMode ( pumpPin, OUTPUT );
   digitalWrite ( pumpPin, LOW );
@@ -99,7 +107,7 @@ void setup(){
 	  Serial.println("uSD initialization failed!. Status will not be recorded.");
   }
   else {
-	  readConfig(); //we know card is accessible.
+	  //readConfig(); //we know card is accessible.
 	  Serial.println("uSD initialization done.");
   }
 
@@ -108,26 +116,48 @@ void setup(){
 void loop(){
 	int Hora = hour(RTC.get());
 
-	checkHygro();
-	watered = 'n';
-    if ( Hora == pumpHour1 || Hora == pumpHour2 ){
-    	startPump(pumpTime);
-    	//delay(300000);
-    	//startPump(pumpTime);
-    }/*else if ( Hora == deepH){
-    	int Day = day(RTC.get());
-    	if ( Day == deepD1 || Day == deepD2 || Day == deepD3 || Day == deepD4 ){
-    		//ignore soil moisture level and just deeply wet the soil
-    		Serial<< F("deeply watering as scheduled...") << endl;
-    		deepWatering();
-    	}
-    }*/ //commented out to disable deep irrigation
+	if ( Hora > hora || ( Hora == 0 && hora > 0 ) ){	//runs only once an hour
+		hora = Hora;	//set actual hour
+		// disable all except temperature
+		//checkHygro();
+		watered = 'n';
+		/*if ( Hora == pumpHour1 || Hora == pumpHour2 ){
+			startPump(pumpTime);
+			//delay(300000);
+			//startPump(pumpTime);
+		}/*else if ( Hora == deepH){
+			int Day = day(RTC.get());
+			if ( Day == deepD1 || Day == deepD2 || Day == deepD3 || Day == deepD4 ){
+				//ignore soil moisture level and just deeply wet the soil
+				Serial<< F("deeply watering as scheduled...") << endl;
+				deepWatering();
+			}
+		}*/ //commented out to disable deep irrigation
 
-    getTemperature();
+		getTemperature();
 
-    dataWrite();
+		dataWrite();
+	}
+    delay(9000); //sleeps for 9s. Enough to keep a powerbank alive
+    sdDummyRead(); //then read from microSD to waste some juice
+}
 
-    delay(3600000-(pumpTime*2)); //sleeps for almost an hour
+/************************************************************
+ * Dummy read from uSD card.
+ * Used o keep Powerbank alive.
+ *
+ */
+void sdDummyRead(){
+	File file = SD.open(dataFile);
+	char single;
+
+	if (!file){	//if error, then error :P
+		Serial << F("error opening file <") << dataFile << F(">") << endl;
+	}else{
+		single=file.read(); //do NOTHING with this read char
+	}
+
+	file.close();	//close the file
 }
 
 
@@ -362,7 +392,6 @@ void deepWatering(){
 void dataWrite(){	//build and write a data line into the microSD card
 
 	char line[70];
-	char dataFile[] = "data.txt";
 	char buffer[12];
 
 	sprintf(line, "%04i/%02i/%02i %02i:%02i %03i         %c        ", year(RTC.get()),month(RTC.get()),day(RTC.get()),hour(RTC.get()),minute(RTC.get()),hygroValue,watered);
@@ -373,7 +402,7 @@ void dataWrite(){	//build and write a data line into the microSD card
 	strcat(line, buffer);
 
 	Serial << F("Writing report line to microSD card... ");
-	int err = dataWriteOnSD(line, dataFile);
+	int err = dataWriteOnSD(line);
 	if (err)
 		Serial << F("An error occurred while writing to microSD card.") << endl;
 	else
@@ -381,7 +410,7 @@ void dataWrite(){	//build and write a data line into the microSD card
 
 }
 
-int dataWriteOnSD(char *wDATA, char *wFILE){	//write wDATA into wFILE on sdcard
+int dataWriteOnSD(char *wDATA){	//write wDATA into wFILE on sdcard
 
 	/* lines should follow this format:
 	 *
@@ -396,13 +425,13 @@ int dataWriteOnSD(char *wDATA, char *wFILE){	//write wDATA into wFILE on sdcard
 	 */
 
 	//test if file exists
-	File file = SD.open(wFILE, FILE_READ);	//open file in read mode
+	File file = SD.open(dataFile, FILE_READ);	//open file in read mode
 
 	if (!file){
 		// if file doesn't exist, try creating it with header line
-		file = SD.open(wFILE, FILE_WRITE);
+		file = SD.open(dataFile, FILE_WRITE);
 		if (!file){	//if error, then error :P
-			Serial << F("error opening file <") << wFILE << F(">") << endl;
+			Serial << F("error opening file <") << dataFile << F(">") << endl;
 			return(1);	//errorcode 1
 		}
 		Serial << F("Data file didn't exist. Created new one.") << endl;
@@ -412,9 +441,9 @@ int dataWriteOnSD(char *wDATA, char *wFILE){	//write wDATA into wFILE on sdcard
 	file.close();
 
 
-	file = SD.open(wFILE, FILE_WRITE);	//open the file
+	file = SD.open(dataFile, FILE_WRITE);	//open the file
 	if (!file){	//if error, then error :P
-		Serial << F("error opening file <") << wFILE << F(">") << endl;
+		Serial << F("error opening file <") << dataFile << F(">") << endl;
 		return(1);	//errorcode 1
 	}
 

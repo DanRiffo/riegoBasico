@@ -466,7 +466,7 @@ environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.COM_PORT/
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.COM_PORT/value=/dev/ttyUSB0
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.ECLIPSE_LOCATION/delimiter=\:
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.ECLIPSE_LOCATION/operation=replace
-environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.ECLIPSE_LOCATION/value=${eclipse_home}////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.ECLIPSE_LOCATION/value=${eclipse_home}/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.EXTRA.ALL/delimiter=\:
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.EXTRA.ALL/operation=replace
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.EXTRA.ALL/value=
@@ -490,7 +490,7 @@ environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.EXTRA.LIN
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.EXTRA.LINK/value=
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.MENU/delimiter=\:
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.MENU/value=
+environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.MENU/value=cpu\=atmega328
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.OBJCOPY/delimiter=\:
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.737288838/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.EEP.PATTERN}\n\t${A.RECIPE.OBJCOPY.HEX.PATTERN}

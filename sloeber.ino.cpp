@@ -2,7 +2,7 @@
 //This is a automatic generated file
 //Please do not modify this file
 //If you touch this file your change will be overwritten during the next build
-//This file has been generated on 2020-05-31 11:36:45
+//This file has been generated on 2020-06-05 21:40:41
 
 #include "Arduino.h"
 #include <Streaming.h>
@@ -13,6 +13,7 @@
 
 void setup();
 void loop();
+void sdDummyRead();
 void readConfig();
 void testRTC();
 void setRTC();
@@ -22,7 +23,7 @@ void checkHygro();
 void startPump(long time);
 void deepWatering();
 void dataWrite();
-int dataWriteOnSD(char *wDATA, char *wFILE);
+int dataWriteOnSD(char *wDATA);
 void getTemperature ();
 
 #include "riegoBasico.ino"
